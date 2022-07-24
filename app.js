@@ -1,6 +1,7 @@
 require('dotenv').config();
 
 const express = require('express')
+let bodyParser = require('body-parser')
 const app = express()
 const port = 3000
 
@@ -17,11 +18,12 @@ let movieSchema = new mongoose.Schema({
 
 const Movie = mongoose.model('Movie', movieSchema);
 
-
+app.use(bodyParser.json());
 
 app.use(function(req, res, next) {
   console.log(req.method + " " + req.path + " - " + req.ip);
   res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   next();
 });
 
@@ -32,6 +34,15 @@ app.get('/', (req, res) => {
 app.get('/Movies', (req, res) => {
 
   Movie.find({}).then(doc => {res.json(doc)}).catch(err => {console.log(err)});
+})
+
+app.post('/Book', (req, res) => {
+  Movie.updateOne({title: req.body.movie, "timings.time": req.body.time, "timings.seats": req.body.seats}, {$set: {"timings.$.seats": req.body.seats - req.body.bookedSeats}}).then(doc => {
+    console.log(req.body.time)
+    console.log(doc)
+  }).catch(err => {console.log(err)});
+
+  res.send('ok');
 })
 
 app.listen(port, () => {
